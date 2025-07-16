@@ -1,0 +1,12 @@
+{
+    "name": "test_void",
+    "biome": "minecraft:the_void",
+    "worldBorder": {
+        "center": [0, 0],
+        "size": 100,
+        "damageAmount": 0.2,
+        "damageBuffer": 5.0,
+        "warningTime": 15,
+        "warningBlocks": 5
+    }
+}

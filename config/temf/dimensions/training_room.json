@@ -1,0 +1,12 @@
+{
+    "name": "training_room",
+    "biome": "minecraft:plains",
+    "worldBorder": {
+        "center": [0, 0],
+        "size": 200,
+        "damageAmount": 0.5,
+        "damageBuffer": 10.0,
+        "warningTime": 30,
+        "warningBlocks": 10
+    }
+}
