@@ -12,6 +12,12 @@ import com.theescapemod.functions.dimension.DimensionConfig;
 import com.theescapemod.functions.world.WorldBorderManager;
 import com.theescapemod.functions.world.BarrierManager;
 import com.theescapemod.functions.schematic.SchematicManager;
+import com.theescapemod.functions.communication.CommunicationLoader;
+import com.theescapemod.functions.screens.ScreenLoader;
+import com.theescapemod.functions.screens.ScreenDisplayHandler;
+import com.theescapemod.functions.item.ModItems;
+import com.theescapemod.functions.item.ModCreativeTabs;
+import com.theescapemod.functions.network.ModNetworking;
 
 import java.util.Map;
 
@@ -45,6 +51,13 @@ public class TheEscapeModFunctions {
         
         // Register data generation
         modEventBus.addListener(TEMFDataGenerator::register);
+        
+        // Register network packets
+        modEventBus.addListener(ModNetworking::register);
+
+        // Register items and creative tabs
+        ModItems.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         NeoForge.EVENT_BUS.register(this);
@@ -66,6 +79,14 @@ public class TheEscapeModFunctions {
         
         // Initialize schematic system
         SchematicManager.init();
+        
+        // Initialize communication system
+        LOGGER.info("Initializing communication system...");
+        CommunicationLoader.init();
+        
+        // Initialize screen display system
+        LOGGER.info("Initializing screen display system...");
+        ScreenLoader.init();
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
@@ -107,6 +128,9 @@ public class TheEscapeModFunctions {
         public static void onClientSetup(FMLClientSetupEvent event) {
             // Some client setup code
             LOGGER.info("The Escape Mod Functions - Client Setup");
+            
+            // Register screen display event handler
+            NeoForge.EVENT_BUS.register(ScreenDisplayHandler.class);
         }
     }
 }

@@ -12,13 +12,13 @@
       "projectName": "The-Escape-Mod-Functions",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/clientRunProgramArgs.txt"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\clientRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/clientRunVmArgs.txt",
-        "-Dfml.modFolders\u003dtheescapemodfunctions%%/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/bin/main"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dtheescapemodfunctions%%D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\bin\\main"
       ],
-      "cwd": "${workspaceFolder}/run",
+      "cwd": "${workspaceFolder}\\run",
       "env": {},
       "console": "internalConsole",
       "shortenCommandLine": "none"
@@ -34,13 +34,13 @@
       "projectName": "The-Escape-Mod-Functions",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/dataRunProgramArgs.txt"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\dataRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/dataRunVmArgs.txt",
-        "-Dfml.modFolders\u003dtheescapemodfunctions%%/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/bin/main"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\dataRunVmArgs.txt",
+        "-Dfml.modFolders\u003dtheescapemodfunctions%%D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\bin\\main"
       ],
-      "cwd": "${workspaceFolder}/run",
+      "cwd": "${workspaceFolder}\\run",
       "env": {},
       "console": "internalConsole",
       "shortenCommandLine": "none"
@@ -56,13 +56,13 @@
       "projectName": "The-Escape-Mod-Functions",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/gameTestServerRunProgramArgs.txt"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\gameTestServerRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/gameTestServerRunVmArgs.txt",
-        "-Dfml.modFolders\u003dtheescapemodfunctions%%/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/bin/main"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\gameTestServerRunVmArgs.txt",
+        "-Dfml.modFolders\u003dtheescapemodfunctions%%D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\bin\\main"
       ],
-      "cwd": "${workspaceFolder}/run",
+      "cwd": "${workspaceFolder}\\run",
       "env": {},
       "console": "internalConsole",
       "shortenCommandLine": "none"
@@ -78,13 +78,13 @@
       "projectName": "The-Escape-Mod-Functions",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/serverRunProgramArgs.txt"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\serverRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/build/moddev/serverRunVmArgs.txt",
-        "-Dfml.modFolders\u003dtheescapemodfunctions%%/Users/josh/Documents/minecraft modding/The-Escape-Mod-Functions/bin/main"
+        "@D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dtheescapemodfunctions%%D:\\MinecraftMods\\new mods\\escape mod functions\\The-Escape-Mod-Functions\\bin\\main"
       ],
-      "cwd": "${workspaceFolder}/run",
+      "cwd": "${workspaceFolder}\\run",
       "env": {},
       "console": "internalConsole",
       "shortenCommandLine": "none"

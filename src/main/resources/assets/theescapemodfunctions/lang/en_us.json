@@ -1,4 +1,6 @@
 {
   "temf.dimension.void_spawn": "Void Spawn",
-  "temf.config.title": "The Escape Mod Functions Configuration"
+  "temf.config.title": "The Escape Mod Functions Configuration",
+  "item.theescapemodfunctions.astral_communicator": "Astral Communicator",
+  "creativetab.theescapemodfunctions.temf_tab": "The Escape Mod Functions"
 }
