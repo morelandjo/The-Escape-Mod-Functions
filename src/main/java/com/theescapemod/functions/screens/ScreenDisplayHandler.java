@@ -7,6 +7,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -53,44 +55,65 @@ public class ScreenDisplayHandler {
             LOGGER.debug("Client cache lookup for {}: {}", pos, screenKey);
         }
         
-        // If not in cache (or on server), check block entity NBT
+        // If not in cache (or on server), check both block entity NBT and item frames
         if (screenKey == null) {
-            blockEntity = level.getBlockEntity(pos);
-            LOGGER.debug("Block entity at {}: {}", pos, blockEntity);
+            // First check for item frames at this position
+            AABB searchBox = new AABB(pos).inflate(0.5);
+            var itemFrames = level.getEntitiesOfClass(ItemFrame.class, searchBox);
             
-            if (blockEntity != null) {
-                // First try persistent data (this is more reliable for custom data)
-                String persistentScreenKey = blockEntity.getPersistentData().getString("screendisp");
-                if (!persistentScreenKey.isEmpty()) {
-                    screenKey = persistentScreenKey;
-                    LOGGER.debug("Found screendisp in persistent data with value: {}", screenKey);
-                } else {
-                    // Try to get NBT data with full metadata (includes custom tags)
-                    CompoundTag nbt = blockEntity.saveWithFullMetadata(level.registryAccess());
-                    LOGGER.debug("Block entity NBT (full): {}", nbt);
-                    
-                    if (nbt.contains(NBT_TAG)) {
-                        screenKey = nbt.getString(NBT_TAG);
-                        LOGGER.debug("Found screendisp tag with value: {}", screenKey);
-                        
-                        // IMPORTANT: If we found it in NBT but not in persistent data,
-                        // restore it to persistent data (this happens after world reload)
-                        LOGGER.info("Restoring screendisp to persistent data after world reload");
-                        blockEntity.getPersistentData().putString("screendisp", screenKey);
-                        blockEntity.setChanged(); // Mark as dirty to ensure it saves
+            for (ItemFrame itemFrame : itemFrames) {
+                // Check if item frame has screen display NBT
+                CompoundTag itemFrameNBT = new CompoundTag();
+                itemFrame.saveWithoutId(itemFrameNBT);
+                LOGGER.debug("Found item frame at {}: {}", pos, itemFrame);
+                LOGGER.debug("Item frame NBT: {}", itemFrameNBT);
+                
+                if (itemFrameNBT.contains(NBT_TAG)) {
+                    screenKey = itemFrameNBT.getString(NBT_TAG);
+                    LOGGER.debug("Found screendisp in item frame with value: {}", screenKey);
+                    break;
+                }
+            }
+            
+            // If no item frame found, check block entity (original functionality)
+            if (screenKey == null) {
+                blockEntity = level.getBlockEntity(pos);
+                LOGGER.debug("Block entity at {}: {}", pos, blockEntity);
+                
+                if (blockEntity != null) {
+                    // First try persistent data (this is more reliable for custom data)
+                    String persistentScreenKey = blockEntity.getPersistentData().getString("screendisp");
+                    if (!persistentScreenKey.isEmpty()) {
+                        screenKey = persistentScreenKey;
+                        LOGGER.debug("Found screendisp in persistent data with value: {}", screenKey);
                     } else {
-                        // Also try without metadata (the previous method)
-                        CompoundTag nbtWithoutMeta = blockEntity.saveWithoutMetadata(level.registryAccess());
-                        LOGGER.debug("Block entity NBT (without meta): {}", nbtWithoutMeta);
+                        // Try to get NBT data with full metadata (includes custom tags)
+                        CompoundTag nbt = blockEntity.saveWithFullMetadata(level.registryAccess());
+                        LOGGER.debug("Block entity NBT (full): {}", nbt);
                         
-                        if (nbtWithoutMeta.contains(NBT_TAG)) {
-                            screenKey = nbtWithoutMeta.getString(NBT_TAG);
-                            LOGGER.debug("Found screendisp tag in without-meta NBT with value: {}", screenKey);
+                        if (nbt.contains(NBT_TAG)) {
+                            screenKey = nbt.getString(NBT_TAG);
+                            LOGGER.debug("Found screendisp tag with value: {}", screenKey);
                             
-                            // Restore to persistent data
-                            LOGGER.info("Restoring screendisp to persistent data from without-meta NBT");
+                            // IMPORTANT: If we found it in NBT but not in persistent data,
+                            // restore it to persistent data (this happens after world reload)
+                            LOGGER.info("Restoring screendisp to persistent data after world reload");
                             blockEntity.getPersistentData().putString("screendisp", screenKey);
-                            blockEntity.setChanged();
+                            blockEntity.setChanged(); // Mark as dirty to ensure it saves
+                        } else {
+                            // Also try without metadata (the previous method)
+                            CompoundTag nbtWithoutMeta = blockEntity.saveWithoutMetadata(level.registryAccess());
+                            LOGGER.debug("Block entity NBT (without meta): {}", nbtWithoutMeta);
+                            
+                            if (nbtWithoutMeta.contains(NBT_TAG)) {
+                                screenKey = nbtWithoutMeta.getString(NBT_TAG);
+                                LOGGER.debug("Found screendisp tag in without-meta NBT with value: {}", screenKey);
+                                
+                                // Restore to persistent data
+                                LOGGER.info("Restoring screendisp to persistent data from without-meta NBT");
+                                blockEntity.getPersistentData().putString("screendisp", screenKey);
+                                blockEntity.setChanged();
+                            }
                         }
                     }
                 }
@@ -109,43 +132,51 @@ public class ScreenDisplayHandler {
             }
         }
         
-        // Special case: if client side has no data but this could be a chest with screen display
+        // Special case: if client side has no data but this could be a block with item frame or chest
         // we should give the server a chance to cancel and send sync data
-        if (level.isClientSide && screenKey == null && blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity) {
-            LOGGER.debug("Client side: Chest interaction but no cached screen data - scheduling delayed check");
+        if (level.isClientSide && screenKey == null) {
+            // Check for item frames or chest block entities at this position
+            AABB searchBox = new AABB(pos).inflate(0.5);
+            var itemFrames = level.getEntitiesOfClass(ItemFrame.class, searchBox);
+            boolean hasItemFrame = !itemFrames.isEmpty();
+            boolean hasChestEntity = blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity;
             
-            // Schedule a delayed check in case the server sends sync data
-            final BlockPos finalPos = pos.immutable();
-            Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft != null) {
-                // Check after more ticks to ensure sync packet has time to arrive
-                minecraft.execute(() -> {
+            if (hasItemFrame || hasChestEntity) {
+                LOGGER.debug("Client side: Found item frame ({}) or chest entity ({}) - scheduling delayed check", hasItemFrame, hasChestEntity);
+                
+                // Schedule a delayed check in case the server sends sync data
+                final BlockPos finalPos = pos.immutable();
+                Minecraft minecraft = Minecraft.getInstance();
+                if (minecraft != null) {
+                    // Check after more ticks to ensure sync packet has time to arrive
                     minecraft.execute(() -> {
                         minecraft.execute(() -> {
                             minecraft.execute(() -> {
                                 minecraft.execute(() -> {
-                                    String delayedScreenKey = ScreenDisplayClientCache.getScreenDisplay(finalPos);
-                                    LOGGER.debug("Delayed check for screen key at {}: {}", finalPos, delayedScreenKey);
-                                    
-                                    if (delayedScreenKey != null && !delayedScreenKey.isEmpty()) {
-                                        LOGGER.info("Found screen key after sync: {}", delayedScreenKey);
-                                        ScreenConfig.ScreenData screenData = ScreenLoader.getScreenConfig().getScreen(delayedScreenKey);
+                                    minecraft.execute(() -> {
+                                        String delayedScreenKey = ScreenDisplayClientCache.getScreenDisplay(finalPos);
+                                        LOGGER.debug("Delayed check for screen key at {}: {}", finalPos, delayedScreenKey);
                                         
-                                        if (screenData != null) {
-                                            LOGGER.info("Opening delayed screen display for key: {}", delayedScreenKey);
-                                            ScreenDisplayScreen screen = new ScreenDisplayScreen(screenData);
-                                            minecraft.setScreen(screen);
+                                        if (delayedScreenKey != null && !delayedScreenKey.isEmpty()) {
+                                            LOGGER.info("Found screen key after sync: {}", delayedScreenKey);
+                                            ScreenConfig.ScreenData screenData = ScreenLoader.getScreenConfig().getScreen(delayedScreenKey);
+                                            
+                                            if (screenData != null) {
+                                                LOGGER.info("Opening delayed screen display for key: {}", delayedScreenKey);
+                                                ScreenDisplayScreen screen = new ScreenDisplayScreen(screenData);
+                                                minecraft.setScreen(screen);
+                                            } else {
+                                                LOGGER.warn("No screen configuration found for delayed key: {}", delayedScreenKey);
+                                            }
                                         } else {
-                                            LOGGER.warn("No screen configuration found for delayed key: {}", delayedScreenKey);
+                                            LOGGER.debug("No screen key found after delayed check - interaction should proceed normally");
                                         }
-                                    } else {
-                                        LOGGER.debug("No screen key found after delayed check - chest should open normally");
-                                    }
+                                    });
                                 });
                             });
                         });
                     });
-                });
+                }
             }
         }
         

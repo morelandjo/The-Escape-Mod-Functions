@@ -8,6 +8,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.phys.AABB;
 import com.mojang.brigadier.context.CommandContext;
 import com.theescapemod.functions.dimension.DimensionConfig;
 import com.theescapemod.functions.dimension.DimensionManager;
@@ -65,7 +67,11 @@ public class TEMFCommands {
                         .then(Commands.literal("set")
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .then(Commands.argument("screen_key", StringArgumentType.string())
-                                                .executes(TEMFCommands::setScreenDisplay)))))
+                                                .executes(TEMFCommands::setScreenDisplay))))
+                        .then(Commands.literal("frame")
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .then(Commands.argument("screen_key", StringArgumentType.string())
+                                                .executes(TEMFCommands::setItemFrameScreenDisplay)))))
         );
         
         // Register the communication stage command separately (no output)
@@ -351,6 +357,60 @@ public class TEMFCommands {
             
         } catch (Exception e) {
             context.getSource().sendFailure(Component.literal("Error setting screen display: " + e.getMessage()));
+            return 0;
+        }
+    }
+    
+    private static int setItemFrameScreenDisplay(CommandContext<CommandSourceStack> context) {
+        try {
+            BlockPos pos = BlockPosArgument.getBlockPos(context, "pos");
+            String screenKey = StringArgumentType.getString(context, "screen_key");
+            ServerLevel level = context.getSource().getLevel();
+            
+            // Check if screen configuration exists
+            if (!ScreenLoader.getScreenConfig().hasScreen(screenKey)) {
+                context.getSource().sendFailure(Component.literal("Screen configuration '" + screenKey + "' not found. Check config/temf/screens.json"));
+                return 0;
+            }
+            
+            // Look for item frames at the position
+            AABB searchBox = new AABB(pos).inflate(0.5);
+            var itemFrames = level.getEntitiesOfClass(ItemFrame.class, searchBox);
+            
+            if (itemFrames.isEmpty()) {
+                context.getSource().sendFailure(Component.literal("No item frame found at position " + pos + ". Place an item frame first."));
+                return 0;
+            }
+            
+            // Use the first item frame found
+            ItemFrame itemFrame = itemFrames.get(0);
+            
+            // Set the NBT tag on the item frame
+            CompoundTag itemFrameNBT = new CompoundTag();
+            itemFrame.saveWithoutId(itemFrameNBT);
+            System.out.println("COMMAND: Original item frame NBT: " + itemFrameNBT);
+            
+            itemFrameNBT.putString("screendisp", screenKey);
+            System.out.println("COMMAND: Modified item frame NBT: " + itemFrameNBT);
+            
+            // Load the modified NBT back into the item frame
+            itemFrame.load(itemFrameNBT);
+            System.out.println("COMMAND: Set screendisp on item frame to: " + screenKey);
+            
+            // Verify the change
+            CompoundTag verifyNBT = new CompoundTag();
+            itemFrame.saveWithoutId(verifyNBT);
+            System.out.println("COMMAND: Verification item frame NBT: " + verifyNBT);
+            
+            // Send sync packet to clients to cache the screen display data
+            System.out.println("COMMAND: Sending sync packet for " + pos + " with key " + screenKey);
+            PacketDistributor.sendToAllPlayers(new ScreenDisplaySyncPacket(pos, screenKey, false));
+            
+            context.getSource().sendSuccess(() -> Component.literal("Set screen display '" + screenKey + "' on item frame at " + pos), true);
+            return 1;
+            
+        } catch (Exception e) {
+            context.getSource().sendFailure(Component.literal("Error setting item frame screen display: " + e.getMessage()));
             return 0;
         }
     }
